@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31402.337
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArwaLED.Lib", "ArwaLED.Lib\ArwaLED.Lib.csproj", "{C0EB7681-D462-4D70-A4E0-3C0E06EDA818}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ArwaLED", "ArwaLED\ArwaLED.csproj", "{4C31E167-B5F1-4816-AA79-6FFCB48A209E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArwaLED", "ArwaLED\ArwaLED.csproj", "{4C31E167-B5F1-4816-AA79-6FFCB48A209E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

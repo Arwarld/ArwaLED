@@ -1,46 +1,61 @@
 ﻿#region
 
 using System;
+using System.Device.Spi;
+using System.Drawing;
 using System.Linq;
-using rpi_ws281x;
+using Iot.Device.Ws28xx;
 
 #endregion
 
 namespace ArwaLED.Lib
 {
-    public class LEDControl : IDisposable
+    public class LEDControl
     {
-        private readonly int[] _LEDDisplayOffsets;
-        private readonly LEDDisplay[] _LEDDisplays;
-        private readonly WS281x _ws281x;
+        private readonly int[] _ledDisplayOffsets;
+        private readonly LEDDisplay[] _ledDisplays;
+        private readonly Ws2812b _ws2812B;
 
         public LEDControl(params LEDDisplay[] outDisplays)
         {
-            _LEDDisplays = outDisplays;
-            _LEDDisplayOffsets = new int[outDisplays.Length];
-            _LEDDisplayOffsets[0] = 0;
+            _ledDisplays = outDisplays;
+            _ledDisplayOffsets = new int[outDisplays.Length];
+            _ledDisplayOffsets[0] = 0;
             for (int i = 1; i < outDisplays.Length; i++)
-                _LEDDisplayOffsets[i] =
-                    _LEDDisplayOffsets[i - 1] + outDisplays[i - 1].Height + outDisplays[i - 1].Width;
-            Settings settings = Settings.CreateDefaultSettings();
-            settings.Channels[0] = new Channel(outDisplays.Sum(d => d.Height * d.Width), 18, 255, false,
-                StripType.WS2812_STRIP);
-            _ws281x = new WS281x(settings);
-        }
+                _ledDisplayOffsets[i] =
+                    _ledDisplayOffsets[i - 1] + outDisplays[i - 1].Height * outDisplays[i - 1].Width;
+            SpiConnectionSettings settings = new(0, 0)
+            {
+                ClockFrequency = 2_400_000,
+                Mode = SpiMode.Mode0,
+                DataBitLength = 8
+            };
 
-        public void Dispose()
-        {
-            _ws281x.Dispose();
+            SpiDevice dev = SpiDevice.Create(settings);
+            _ws2812B = new Ws2812b(dev, outDisplays.Sum(d => d.Height * d.Width));
         }
 
         public void Render()
         {
-            for (int i = 0; i < _LEDDisplays.Length; i++)
-            for (int y = 0; y < _LEDDisplays[i].Height; y++)
-            for (int x = 0; x < _LEDDisplays[i].Width; x++)
-                _ws281x.SetLEDColor(0, _LEDDisplayOffsets[i] + y * _LEDDisplays[i].Height + x,
-                    _LEDDisplays[i].LEDScene.GetColor(x, y));
-            _ws281x.Render();
+            DateTime before = DateTime.Now;
+            for (int i = 0; i < _ledDisplays.Length; i++)
+            {
+                _ledDisplays[i].LEDScene.Render();
+                for (int y = 0; y < _ledDisplays[i].Height; y++)
+                for (int x = 0; x < _ledDisplays[i].Width; x++)
+                    _ws2812B.Image.SetPixel(_ledDisplayOffsets[i] + y * _ledDisplays[i].Height + x, 0,
+                        _ledDisplays[i].LEDScene.GetColor(x, y));
+            }
+
+            _ws2812B.Update();
+            Console.WriteLine("Update done - took {0}", DateTime.Now - before);
+        }
+
+        public void AllBlack()
+        {
+            for (int i = 0; i < _ws2812B.Image.Width; i++)
+                _ws2812B.Image.SetPixel(i, 0, Color.Black);
+            _ws2812B.Update();
         }
     }
 }

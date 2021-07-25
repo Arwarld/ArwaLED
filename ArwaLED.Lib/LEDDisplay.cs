@@ -13,7 +13,7 @@ namespace ArwaLED.Lib
         {
             Width = width;
             Height = height;
-            LEDScene = new(Color.Black, height, width);
+            LEDScene = new LEDScene(Color.Black, height, width);
         }
 
         public int Width { get; }
